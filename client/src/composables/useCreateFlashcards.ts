@@ -1,5 +1,5 @@
-import { ref } from "vue"
-import axios from "axios"
+import { axiosInstance } from '@/lib/axios'
+import { ref } from 'vue'
 
 interface Flashcard {
   question: string
@@ -12,16 +12,16 @@ export function useCreateFlashcards() {
   const createFlashcards = async (file: File) => {
     try {
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append('file', file)
 
-      const response = await axios.post("/api/create-flashcards", formData, {
+      const response = await axiosInstance.post('/api/flashcards/create', formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          'Content-Type': 'multipart/form-data',
         },
       })
       flashcards.value = response.data
     } catch (error) {
-      console.error("Error creating flashcards:", error)
+      console.error('Error creating flashcards:', error)
     }
   }
 
@@ -30,4 +30,3 @@ export function useCreateFlashcards() {
     createFlashcards,
   }
 }
-

@@ -1,161 +1,166 @@
-import type { Request, Response } from "express"
-import fs from "fs"
-import pdf from "pdf-parse"
-import mammoth from "mammoth"
-import { Configuration, OpenAIApi } from "openai"
-import Flashcard from "../models/Flashcard"
-import type { AuthRequest } from "../middleware/auth"
-import { calculateNextReview } from "../utils/spacedRepetition"
-import multer from "multer"
-import type Express from "express" //Import Express
+import type { Request, Response } from "express";
+import fs from "fs";
+import pdf from "pdf-parse";
+import mammoth from "mammoth";
+import { Configuration, OpenAIApi } from "openai";
+import Flashcard from "../models/Flashcard";
+import type { AuthRequest } from "../middleware/auth";
+import { calculateNextReview } from "../utils/spacedRepetition";
+import multer from "multer";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
-})
-const openai = new OpenAIApi(configuration)
+});
+const openai = new OpenAIApi(configuration);
 
-const upload = multer({ dest: "uploads/" })
+const upload = multer({ dest: "uploads/" });
 
 export const createFlashcards = async (req: Request, res: Response) => {
   try {
     upload.single("file")(req, res, async (err) => {
       if (err) {
-        return res.status(400).json({ error: err.message })
+        return res.status(400).json({ error: err.message });
       }
       if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" })
+        return res.status(400).json({ error: "No file uploaded" });
       }
 
-      const fileContent = await extractFileContent(req.file)
-      const flashcards = await generateFlashcards(fileContent)
-      res.json(flashcards)
-    })
+      const fileContent = await extractFileContent(req.file);
+      const flashcards = await generateFlashcards(fileContent);
+      res.json(flashcards);
+    });
   } catch (error) {
-    console.error("Error creating flashcards:", error)
-    res.status(500).json({ error: "Error creating flashcards" })
+    console.error("Error creating flashcards:", error);
+    res.status(500).json({ error: "Error creating flashcards" });
   }
-}
+};
 
 export const saveFlashcards = async (req: AuthRequest, res: Response) => {
   try {
-    const flashcardsData = req.body
-    const userId = req.user?.id
+    const flashcardsData = req.body;
+    const userId = req.user?.id;
 
     const savedFlashcards = await Promise.all(
       flashcardsData.map(
         async (flashcardData: {
-          question: string
-          answer: string
-          deck?: string
-          difficulty?: "Easy" | "Medium" | "Hard"
+          question: string;
+          answer: string;
+          deck?: string;
+          difficulty?: "Easy" | "Medium" | "Hard";
         }) => {
-          const flashcard = new Flashcard({ ...flashcardData, user: userId })
-          return await flashcard.save()
-        },
-      ),
-    )
+          const flashcard = new Flashcard({ ...flashcardData, user: userId });
+          return await flashcard.save();
+        }
+      )
+    );
 
-    res.status(201).json(savedFlashcards)
+    res.status(201).json(savedFlashcards);
   } catch (error) {
-    console.error("Error saving flashcards:", error)
-    res.status(500).json({ error: "Error saving flashcards" })
+    console.error("Error saving flashcards:", error);
+    res.status(500).json({ error: "Error saving flashcards" });
   }
-}
+};
 
 export const getFlashcards = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id
-    const { deck, difficulty, search } = req.query
+    const userId = req.user?.id;
+    const { deck, difficulty, search } = req.query;
 
-    const query: any = { user: userId }
+    const query: any = { user: userId };
 
-    if (deck) query.deck = deck
-    if (difficulty) query.difficulty = difficulty
+    if (deck) query.deck = deck;
+    if (difficulty) query.difficulty = difficulty;
     if (search) {
-      query.$or = [{ question: { $regex: search, $options: "i" } }, { answer: { $regex: search, $options: "i" } }]
+      query.$or = [
+        { question: { $regex: search, $options: "i" } },
+        { answer: { $regex: search, $options: "i" } },
+      ];
     }
 
-    const flashcards = await Flashcard.find(query).sort({ nextReviewDate: 1 })
-    res.json(flashcards)
+    const flashcards = await Flashcard.find(query).sort({ nextReviewDate: 1 });
+    res.json(flashcards);
   } catch (error) {
-    console.error("Error fetching flashcards:", error)
-    res.status(500).json({ error: "Error fetching flashcards" })
+    console.error("Error fetching flashcards:", error);
+    res.status(500).json({ error: "Error fetching flashcards" });
   }
-}
+};
 
 export const reviewFlashcard = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params
-    const { quality, difficulty } = req.body
-    const userId = req.user?.id
+    const { id } = req.params;
+    const { quality, difficulty } = req.body;
+    const userId = req.user?.id;
 
-    const flashcard = await Flashcard.findOne({ _id: id, user: userId })
+    const flashcard = await Flashcard.findOne({ _id: id, user: userId });
     if (!flashcard) {
-      return res.status(404).json({ error: "Flashcard not found" })
+      return res.status(404).json({ error: "Flashcard not found" });
     }
 
     const { nextReviewDate, easeFactor, interval } = calculateNextReview(
       { quality, difficulty },
       flashcard.easeFactor,
-      flashcard.interval,
-    )
+      flashcard.interval
+    );
 
-    flashcard.nextReviewDate = nextReviewDate
-    flashcard.easeFactor = easeFactor
-    flashcard.interval = interval
-    flashcard.reviewCount += 1
-    flashcard.difficulty = difficulty
+    flashcard.nextReviewDate = nextReviewDate;
+    flashcard.easeFactor = easeFactor;
+    flashcard.interval = interval;
+    flashcard.reviewCount += 1;
+    flashcard.difficulty = difficulty;
 
-    await flashcard.save()
+    await flashcard.save();
 
-    res.json(flashcard)
+    res.json(flashcard);
   } catch (error) {
-    console.error("Error reviewing flashcard:", error)
-    res.status(500).json({ error: "Error reviewing flashcard" })
+    console.error("Error reviewing flashcard:", error);
+    res.status(500).json({ error: "Error reviewing flashcard" });
   }
-}
+};
 
 export const deleteFlashcard = async (req: AuthRequest, res: Response) => {
   try {
-    const flashcardId = req.params.id
-    const userId = req.user?.id
+    const flashcardId = req.params.id;
+    const userId = req.user?.id;
 
-    const flashcard = await Flashcard.findOneAndDelete({ _id: flashcardId, user: userId })
+    const flashcard = await Flashcard.findOneAndDelete({
+      _id: flashcardId,
+      user: userId,
+    });
     if (!flashcard) {
-      return res.status(404).json({ error: "Flashcard not found" })
+      return res.status(404).json({ error: "Flashcard not found" });
     }
 
-    res.json({ message: "Flashcard deleted successfully" })
+    res.json({ message: "Flashcard deleted successfully" });
   } catch (error) {
-    console.error("Error deleting flashcard:", error)
-    res.status(500).json({ error: "Error deleting flashcard" })
+    console.error("Error deleting flashcard:", error);
+    res.status(500).json({ error: "Error deleting flashcard" });
   }
-}
+};
 
 async function extractFileContent(file: Express.Multer.File): Promise<string> {
-  const { originalname, path } = file
-  const fileExtension = originalname.split(".").pop()?.toLowerCase()
+  const { originalname, path } = file;
+  const fileExtension = originalname.split(".").pop()?.toLowerCase();
 
-  let content = ""
+  let content = "";
 
   switch (fileExtension) {
     case "pdf":
-      const pdfData = await pdf(fs.readFileSync(path))
-      content = pdfData.text
-      break
+      const pdfData = await pdf(fs.readFileSync(path));
+      content = pdfData.text;
+      break;
     case "docx":
-      const result = await mammoth.extractRawText({ path })
-      content = result.value
-      break
+      const result = await mammoth.extractRawText({ path });
+      content = result.value;
+      break;
     case "txt":
-      content = fs.readFileSync(path, "utf-8")
-      break
+      content = fs.readFileSync(path, "utf-8");
+      break;
     default:
-      throw new Error("Unsupported file format")
+      throw new Error("Unsupported file format");
   }
 
-  fs.unlinkSync(path) // Remove the temporary file
-  return content
+  fs.unlinkSync(path); // Remove the temporary file
+  return content;
 }
 
 async function generateFlashcards(content: string) {
@@ -171,7 +176,7 @@ Output format:
     "answer": "..."
   },
   ...
-]`
+]`;
 
   const response = await openai.createCompletion({
     model: "text-davinci-002",
@@ -179,9 +184,8 @@ Output format:
     max_tokens: 500,
     n: 1,
     temperature: 0.7,
-  })
+  });
 
-  const flashcardsJson = response.data.choices[0].text?.trim()
-  return JSON.parse(flashcardsJson || "[]")
+  const flashcardsJson = response.data.choices[0].text?.trim();
+  return JSON.parse(flashcardsJson || "[]");
 }
-

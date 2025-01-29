@@ -1,8 +1,8 @@
-import { ref } from "vue"
-import axios from "axios"
+import { axiosInstance } from '@/lib/axios'
+import { ref } from 'vue'
 
 interface RecommendationItem {
-  type: "course" | "flashcard"
+  type: 'course' | 'flashcard'
   id: string
   title: string
   similarity: number
@@ -15,10 +15,10 @@ export function useRecommendations() {
   const fetchRecommendations = async () => {
     isLoading.value = true
     try {
-      const response = await axios.get("/api/recommendations")
+      const response = await axiosInstance.get('/api/recommendations')
       recommendations.value = response.data
     } catch (error) {
-      console.error("Error fetching recommendations:", error)
+      console.error('Error fetching recommendations:', error)
     } finally {
       isLoading.value = false
     }
@@ -30,4 +30,3 @@ export function useRecommendations() {
     fetchRecommendations,
   }
 }
-

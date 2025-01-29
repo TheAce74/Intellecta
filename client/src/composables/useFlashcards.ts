@@ -1,12 +1,12 @@
-import { ref, computed } from "vue"
-import axios from "axios"
+import { axiosInstance } from '@/lib/axios'
+import { ref, computed } from 'vue'
 
 interface Flashcard {
   id: string
   question: string
   answer: string
   deck: string
-  difficulty: "Easy" | "Medium" | "Hard"
+  difficulty: 'Easy' | 'Medium' | 'Hard'
   nextReviewDate: Date
 }
 
@@ -14,41 +14,50 @@ export function useFlashcards() {
   const flashcards = ref<Flashcard[]>([])
   const isLoading = ref(false)
 
-  const fetchFlashcards = async (params: { deck?: string; difficulty?: string; search?: string } = {}) => {
+  const fetchFlashcards = async (
+    params: { deck?: string; difficulty?: string; search?: string } = {},
+  ) => {
     isLoading.value = true
     try {
-      const response = await axios.get("/api/flashcards", { params })
+      const response = await axiosInstance.get('/api/flashcards', { params })
       flashcards.value = response.data
     } catch (error) {
-      console.error("Error fetching flashcards:", error)
+      console.error('Error fetching flashcards:', error)
     } finally {
       isLoading.value = false
     }
   }
 
-  const saveFlashcards = async (newFlashcards: Omit<Flashcard, "id" | "nextReviewDate">[]) => {
+  const saveFlashcards = async (newFlashcards: Omit<Flashcard, 'id' | 'nextReviewDate'>[]) => {
     isLoading.value = true
     try {
-      const response = await axios.post("/api/flashcards", newFlashcards)
+      const response = await axiosInstance.post('/api/flashcards', newFlashcards)
       flashcards.value.push(...response.data)
     } catch (error) {
-      console.error("Error saving flashcards:", error)
+      console.error('Error saving flashcards:', error)
       throw error
     } finally {
       isLoading.value = false
     }
   }
 
-  const reviewFlashcard = async (id: string, quality: number, difficulty: "Easy" | "Medium" | "Hard") => {
+  const reviewFlashcard = async (
+    id: string,
+    quality: number,
+    difficulty: 'Easy' | 'Medium' | 'Hard',
+  ) => {
     isLoading.value = true
     try {
-      const response = await axios.post(`/api/flashcards/${id}/review`, { quality, difficulty })
+      const response = await axiosInstance.post(`/api/flashcards/${id}/review`, {
+        quality,
+        difficulty,
+      })
       const index = flashcards.value.findIndex((f) => f.id === id)
       if (index !== -1) {
         flashcards.value[index] = response.data
       }
     } catch (error) {
-      console.error("Error reviewing flashcard:", error)
+      console.error('Error reviewing flashcard:', error)
       throw error
     } finally {
       isLoading.value = false
@@ -58,10 +67,10 @@ export function useFlashcards() {
   const deleteFlashcard = async (id: string) => {
     isLoading.value = true
     try {
-      await axios.delete(`/api/flashcards/${id}`)
+      await axiosInstance.delete(`/api/flashcards/${id}`)
       flashcards.value = flashcards.value.filter((flashcard) => flashcard.id !== id)
     } catch (error) {
-      console.error("Error deleting flashcard:", error)
+      console.error('Error deleting flashcard:', error)
       throw error
     } finally {
       isLoading.value = false
@@ -82,4 +91,3 @@ export function useFlashcards() {
     decks,
   }
 }
-

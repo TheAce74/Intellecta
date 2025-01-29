@@ -1,5 +1,5 @@
-import { ref } from "vue"
-import axios from "axios"
+import { axiosInstance } from '@/lib/axios'
+import { ref } from 'vue'
 
 interface Module {
   title: string
@@ -16,10 +16,10 @@ export function useGenerateCourse() {
 
   const generateCourse = async (subject: string) => {
     try {
-      const response = await axios.post("/api/generate-course", { subject })
+      const response = await axiosInstance.post('/api/courses/generate', { subject })
       course.value = response.data
     } catch (error) {
-      console.error("Error generating course:", error)
+      console.error('Error generating course:', error)
     }
   }
 
@@ -28,4 +28,3 @@ export function useGenerateCourse() {
     generateCourse,
   }
 }
-
