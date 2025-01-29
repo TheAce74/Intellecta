@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
-    <header class="bg-white shadow-sm sticky top-0">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
       <nav class="container mx-auto px-4 py-4">
         <ul class="flex justify-between items-center">
           <li>
