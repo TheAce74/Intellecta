@@ -9,7 +9,10 @@
           <span class="text-sm font-medium text-gray-700">{{ Math.round(course.progress) }}%</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2.5">
-          <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${course.progress}%` }"></div>
+          <div
+            class="bg-blue-600 h-2.5 rounded-full"
+            :style="{ width: `${course.progress}%` }"
+          ></div>
         </div>
       </div>
       <div class="flex justify-between items-center">
@@ -19,10 +22,7 @@
         >
           View Course
         </router-link>
-        <button
-          @click="handleDelete"
-          class="text-red-600 hover:text-red-800"
-        >
+        <button @click="handleDelete" class="text-red-600 hover:text-red-800">
           <TrashIcon class="h-5 w-5" />
         </button>
       </div>
@@ -35,10 +35,12 @@
             :id="`module-${course.id}-${index}`"
             type="checkbox"
             :checked="module.completed"
-            @change="updateProgress(index, $event.target.checked)"
+            @change="updateProgress(index, $event?.target?.checked)"
             class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-          >
-          <label :for="`module-${course.id}-${index}`" class="ml-2 text-sm text-gray-700">{{ module.title }}</label>
+          />
+          <label :for="`module-${course.id}-${index}`" class="ml-2 text-sm text-gray-700">{{
+            module.title
+          }}</label>
         </li>
       </ul>
     </div>
@@ -78,4 +80,3 @@ const updateProgress = (moduleIndex: number, completed: boolean) => {
   emit('update-progress', props.course.id, moduleIndex, completed)
 }
 </script>
-

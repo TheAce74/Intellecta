@@ -26,7 +26,9 @@
         </select>
       </div>
       <div class="mb-4">
-        <label for="length" class="block text-gray-700 font-bold mb-2">Course Length (number of modules)</label>
+        <label for="length" class="block text-gray-700 font-bold mb-2"
+          >Course Length (number of modules)</label
+        >
         <input
           v-model.number="length"
           type="number"
@@ -38,7 +40,9 @@
         />
       </div>
       <div class="mb-4">
-        <label for="specificTopics" class="block text-gray-700 font-bold mb-2">Specific Topics (comma-separated)</label>
+        <label for="specificTopics" class="block text-gray-700 font-bold mb-2"
+          >Specific Topics (comma-separated)</label
+        >
         <input
           v-model="specificTopics"
           type="text"
@@ -58,7 +62,11 @@
     <div v-if="course" class="bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-2xl font-bold mb-4 text-gray-800">{{ course.title }}</h3>
       <ul class="space-y-4">
-        <li v-for="(module, index) in course.modules" :key="index" class="border-b pb-4 last:border-b-0">
+        <li
+          v-for="(module, index) in course.modules"
+          :key="index"
+          class="border-b pb-4 last:border-b-0"
+        >
           <h4 class="text-xl font-semibold mb-2 text-gray-700">{{ module.title }}</h4>
           <p class="text-gray-600 mb-2">{{ module.content }}</p>
           <div v-if="module.quiz" class="mt-4">
@@ -67,7 +75,11 @@
               <li v-for="(question, qIndex) in module.quiz" :key="qIndex">
                 <p class="font-medium text-gray-700">{{ question.question }}</p>
                 <ul class="ml-4 mt-1">
-                  <li v-for="(option, oIndex) in question.options" :key="oIndex" class="text-gray-600">
+                  <li
+                    v-for="(option, oIndex) in question.options"
+                    :key="oIndex"
+                    class="text-gray-600"
+                  >
                     {{ option }}
                   </li>
                 </ul>
@@ -104,7 +116,10 @@ const { isLoggedIn } = useAuth()
 const course = ref(null)
 
 const handleGenerateCourse = async () => {
-  const topics = specificTopics.value.split(',').map(topic => topic.trim()).filter(Boolean)
+  const topics = specificTopics.value
+    .split(',')
+    .map((topic) => topic.trim())
+    .filter(Boolean)
   course.value = await generateCourse(subject.value, difficulty.value, length.value, topics)
 }
 
@@ -117,4 +132,3 @@ const saveCourse = async () => {
   }
 }
 </script>
-
