@@ -1,7 +1,7 @@
 import { axiosInstance } from '@/lib/axios'
 import { ref } from 'vue'
 
-interface Module {
+export interface Module {
   title: string
   content: string
   completed: boolean
@@ -12,8 +12,8 @@ interface Module {
   }[]
 }
 
-interface Course {
-  id: string
+export interface Course {
+  _id: string
   title: string
   modules: Module[]
   progress: number
@@ -76,7 +76,7 @@ export function useCourses() {
     isLoading.value = true
     try {
       await axiosInstance.delete(`/api/courses/${id}`)
-      courses.value = courses.value.filter((course) => course.id !== id)
+      courses.value = courses.value.filter((course) => course._id !== id)
     } catch (error) {
       console.error('Error deleting course:', error)
       throw error
@@ -98,7 +98,7 @@ export function useCourses() {
         completed,
       })
       const updatedCourse = response.data.course
-      const index = courses.value.findIndex((c) => c.id === courseId)
+      const index = courses.value.findIndex((c) => c._id === courseId)
       if (index !== -1) {
         courses.value[index] = updatedCourse
       }

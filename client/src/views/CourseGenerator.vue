@@ -102,7 +102,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useCourses } from '@/composables/useCourses'
+import { useCourses, type Course } from '@/composables/useCourses'
 import { useAuth } from '@/composables/useAuth'
 
 const subject = ref('')
@@ -113,7 +113,7 @@ const specificTopics = ref('')
 const { generateCourse, saveCourse: saveUserCourse, isLoading } = useCourses()
 const { isLoggedIn } = useAuth()
 
-const course = ref(null)
+const course = ref<null | Course>(null)
 
 const handleGenerateCourse = async () => {
   const topics = specificTopics.value

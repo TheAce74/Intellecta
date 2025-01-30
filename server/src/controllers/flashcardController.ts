@@ -2,16 +2,20 @@ import type { Request, Response } from "express";
 import fs from "fs";
 import pdf from "pdf-parse";
 import mammoth from "mammoth";
-import { Configuration, OpenAIApi } from "openai";
 import Flashcard from "../models/Flashcard";
 import type { AuthRequest } from "../middleware/auth";
 import { calculateNextReview } from "../utils/spacedRepetition";
 import multer from "multer";
+import OpenAI from "openai";
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
+
+const openai = new OpenAI({
+  baseURL: "https://models.inference.ai.azure.com",
+  apiKey: process.env.GITHUB_TOKEN,
 });
-const openai = new OpenAIApi(configuration);
 
 const upload = multer({ dest: "uploads/" });
 
@@ -178,14 +182,20 @@ Output format:
   ...
 ]`;
 
-  const response = await openai.createCompletion({
-    model: "text-davinci-002",
-    prompt,
-    max_tokens: 500,
-    n: 1,
-    temperature: 0.7,
+  const completion = await openai.chat.completions.create({
+    messages: [
+      { role: "system", content: "" },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    model: "gpt-4o",
+    temperature: 1,
+    max_tokens: 4096,
+    top_p: 1,
   });
 
-  const flashcardsJson = response.data.choices[0].text?.trim();
+  const flashcardsJson = completion.choices[0].message.content?.trim();
   return JSON.parse(flashcardsJson || "[]");
 }

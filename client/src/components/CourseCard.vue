@@ -17,7 +17,7 @@
       </div>
       <div class="flex justify-between items-center">
         <router-link
-          :to="`/course/${course.id}`"
+          :to="`/course/${course._id}`"
           class="text-blue-600 hover:text-blue-800 font-medium"
         >
           View Course
@@ -32,13 +32,13 @@
       <ul class="space-y-2">
         <li v-for="(module, index) in course.modules" :key="index" class="flex items-center">
           <input
-            :id="`module-${course.id}-${index}`"
+            :id="`module-${course._id}-${index}`"
             type="checkbox"
             :checked="module.completed"
-            @change="updateProgress(index, $event?.target?.checked)"
+            @change="updateProgress(index, !module.completed)"
             class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
           />
-          <label :for="`module-${course.id}-${index}`" class="ml-2 text-sm text-gray-700">{{
+          <label :for="`module-${course._id}-${index}`" class="ml-2 text-sm text-gray-700">{{
             module.title
           }}</label>
         </li>
@@ -57,7 +57,7 @@ interface Module {
 }
 
 interface Course {
-  id: string
+  _id: string
   title: string
   modules: Module[]
   progress: number
@@ -73,10 +73,10 @@ const emit = defineEmits<{
 }>()
 
 const handleDelete = () => {
-  emit('delete', props.course.id)
+  emit('delete', props.course._id)
 }
 
 const updateProgress = (moduleIndex: number, completed: boolean) => {
-  emit('update-progress', props.course.id, moduleIndex, completed)
+  emit('update-progress', props.course._id, moduleIndex, completed)
 }
 </script>

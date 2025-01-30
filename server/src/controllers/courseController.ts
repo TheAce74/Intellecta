@@ -1,12 +1,17 @@
 import type { Request, Response } from "express";
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 import Course from "../models/Course";
 import type { AuthRequest } from "../middleware/auth";
+import "dotenv/config";
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+// const openai = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
+
+const openai = new OpenAI({
+  baseURL: "https://models.inference.ai.azure.com",
+  apiKey: process.env.GITHUB_TOKEN,
 });
-const openai = new OpenAIApi(configuration);
 
 export const generateCourse = async (req: Request, res: Response) => {
   try {
@@ -16,17 +21,33 @@ export const generateCourse = async (req: Request, res: Response) => {
       specificTopics
         ? `Include the following specific topics: ${specificTopics.join(", ")}.`
         : ""
-    } Each module should have a title and a brief description.`;
+    } Each module should have a title and a brief description.
+    Your response should be in valid JSON, following the type/format below:
+    {
+      title: string;
+      modules: {
+        title: string;
+        content: string;
+      }
+      difficulty: "beginner" | "intermediate" | "advanced";
+    };
+    `;
 
-    const response = await openai.createCompletion({
-      model: "text-davinci-002",
-      prompt,
-      max_tokens: 1000,
-      n: 1,
-      temperature: 0.7,
+    const completion = await openai.chat.completions.create({
+      messages: [
+        { role: "system", content: "" },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      model: "gpt-4o",
+      temperature: 1,
+      max_tokens: 4096,
+      top_p: 1,
     });
 
-    const courseOutline = response.data.choices[0].text?.trim();
+    const courseOutline = completion.choices[0].message.content?.trim();
 
     // Parse the course outline into a structured format
     const courseStructure = parseCourseOutline(courseOutline || "");
@@ -43,10 +64,10 @@ export const generateCourse = async (req: Request, res: Response) => {
 
 export const saveCourse = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, modules } = req.body;
+    const { title, modules, difficulty } = req.body;
     const userId = req.user?.id;
 
-    const course = new Course({ title, modules, user: userId });
+    const course = new Course({ title, modules, user: userId, difficulty });
     await course.save();
 
     res.status(201).json(course);
@@ -125,30 +146,11 @@ export const updateModuleProgress = async (req: AuthRequest, res: Response) => {
 };
 
 function parseCourseOutline(outline: string) {
-  const lines = outline.split("\n");
-  const course = {
-    title: lines[0],
-    modules: [] as { title: string; content: string }[],
+  const validJSON = outline.split("```json").join("").split("```").join("");
+  const course = JSON.parse(validJSON) as {
+    title: string;
+    modules: { title: string; content: string }[];
   };
-
-  let currentModule: { title: string; content: string } | null = null;
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (line.startsWith("Module")) {
-      if (currentModule) {
-        course.modules.push(currentModule);
-      }
-      currentModule = { title: line, content: "" };
-    } else if (currentModule) {
-      currentModule.content += line + " ";
-    }
-  }
-
-  if (currentModule) {
-    course.modules.push(currentModule);
-  }
-
   return course;
 }
 
@@ -158,43 +160,59 @@ async function generateQuizzesForModules(course: {
 }) {
   const courseWithQuizzes = {
     ...course,
-    modules: await Promise.all(
-      course.modules.map(async (module) => {
-        const quiz = await generateQuizForModule(module);
-        return { ...module, quiz };
-      })
-    ),
+    modules: await generateQuizForModule(course.modules),
   };
   return courseWithQuizzes;
 }
 
-async function generateQuizForModule(module: {
-  title: string;
-  content: string;
-}) {
-  const prompt = `Generate a quiz with 5 multiple-choice questions based on the following module content:
+async function generateQuizForModule(
+  modules: {
+    title: string;
+    content: string;
+  }[]
+) {
+  const prompt = `Generate quizzes with 5 multiple-choice questions for each module based on the following modules contents:
 
+${modules.map(
+  (module) => `
 Module: ${module.title}
 Content: ${module.content}
+`
+)}
 
 Output format:
 [
   {
-    "question": "...",
-    "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
-    "correctAnswer": "A"
+    title: "...",
+    content: "...",
+    quiz: [
+      {
+        "question": "...",
+        "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
+        "correctAnswer": "A"
+      },
+      ...
+    ]
   },
   ...
 ]`;
 
-  const response = await openai.createCompletion({
-    model: "text-davinci-002",
-    prompt,
-    max_tokens: 1000,
-    n: 1,
-    temperature: 0.7,
+  const completion = await openai.chat.completions.create({
+    messages: [
+      { role: "system", content: "" },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    model: "gpt-4o",
+    temperature: 1,
+    max_tokens: 4096,
+    top_p: 1,
   });
 
-  const quizJson = response.data.choices[0].text?.trim();
-  return JSON.parse(quizJson || "[]");
+  const quizJson = completion.choices[0].message.content?.trim();
+  return JSON.parse(
+    String(quizJson).split("```json").join("").split("```").join("")
+  );
 }
