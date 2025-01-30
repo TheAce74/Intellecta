@@ -1,13 +1,16 @@
 import { axiosInstance } from '@/lib/axios'
 import { ref, computed } from 'vue'
 
-interface Flashcard {
-  id: string
+export interface Flashcard {
+  _id: string
   question: string
   answer: string
   deck: string
   difficulty: 'Easy' | 'Medium' | 'Hard'
   nextReviewDate: Date
+  reviewCount: number
+  easeFactor: number
+  interval: number
 }
 
 export function useFlashcards() {
@@ -28,7 +31,7 @@ export function useFlashcards() {
     }
   }
 
-  const saveFlashcards = async (newFlashcards: Omit<Flashcard, 'id' | 'nextReviewDate'>[]) => {
+  const saveFlashcards = async (newFlashcards: Omit<Flashcard, '_id' | 'nextReviewDate'>[]) => {
     isLoading.value = true
     try {
       const response = await axiosInstance.post('/api/flashcards', newFlashcards)
@@ -52,7 +55,7 @@ export function useFlashcards() {
         quality,
         difficulty,
       })
-      const index = flashcards.value.findIndex((f) => f.id === id)
+      const index = flashcards.value.findIndex((f) => f._id === id)
       if (index !== -1) {
         flashcards.value[index] = response.data
       }
@@ -68,7 +71,7 @@ export function useFlashcards() {
     isLoading.value = true
     try {
       await axiosInstance.delete(`/api/flashcards/${id}`)
-      flashcards.value = flashcards.value.filter((flashcard) => flashcard.id !== id)
+      flashcards.value = flashcards.value.filter((flashcard) => flashcard._id !== id)
     } catch (error) {
       console.error('Error deleting flashcard:', error)
       throw error

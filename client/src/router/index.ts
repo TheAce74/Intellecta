@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import Home from '@/views/Home.vue'
 import CourseGenerator from '@/views/CourseGenerator.vue'
 import FlashcardCreator from '@/views/FlashcardCreator.vue'
+import FlashcardList from '@/views/FlashcardList.vue'
 import MyCourses from '@/views/MyCourses.vue'
 import CourseView from '@/views/CourseView.vue'
 import FlashcardReview from '@/views/FlashcardReview.vue'
@@ -26,6 +27,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/flashcard-creator',
     name: 'FlashcardCreator',
     component: FlashcardCreator,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/flashcards',
+    name: 'FlashcardList',
+    component: FlashcardList,
     meta: { requiresAuth: true },
   },
   {

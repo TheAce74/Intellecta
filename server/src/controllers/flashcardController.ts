@@ -168,16 +168,17 @@ async function extractFileContent(file: Express.Multer.File): Promise<string> {
 }
 
 async function generateFlashcards(content: string) {
-  const prompt = `Generate 5 flashcards based on the following content. Each flashcard should have a question and an answer. Format the output as JSON:
+  const prompt = `Generate 5 flashcards based on the following content. Each flashcard should have a question, an answer, and a difficulty level (of either Easy, Medium or Hard) which I'll leave the deduction to you. Format the output as JSON:
 
 Content:
-${content.substring(0, 1000)} // Limit content to 1000 characters
+${content.substring(0, 4096)} // Limit content to 4096 characters
 
 Output format:
 [
   {
     "question": "...",
-    "answer": "..."
+    "answer": "...",
+    "difficulty": "Easy" | "Medium" | "Hard"
   },
   ...
 ]`;
@@ -197,5 +198,7 @@ Output format:
   });
 
   const flashcardsJson = completion.choices[0].message.content?.trim();
-  return JSON.parse(flashcardsJson || "[]");
+  return JSON.parse(
+    String(flashcardsJson).split("```json").join("").split("```").join("")
+  );
 }

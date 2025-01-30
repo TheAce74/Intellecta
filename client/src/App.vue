@@ -109,6 +109,7 @@ const navItems = computed(() => [
   { to: '/course-generator', text: 'Course Generator' },
   { to: '/flashcard-creator', text: 'Flashcard Creator' },
   { to: '/my-courses', text: 'My Courses' },
+  { to: '/flashcards', text: 'My Flashcards' },
   { to: '/flashcard-review', text: 'Flashcard Review' },
   { to: '/recommendations', text: 'Recommendations' },
   ...(isLoggedIn.value

@@ -38,10 +38,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useFlashcards } from '@/composables/useFlashcards'
+import { useFlashcards, type Flashcard } from '@/composables/useFlashcards'
 
 const { flashcards, fetchFlashcards, reviewFlashcard } = useFlashcards()
-const currentFlashcard = ref(null)
+const currentFlashcard = ref<Flashcard | null>(null)
 const showAnswer = ref(false)
 
 onMounted(async () => {
@@ -56,9 +56,8 @@ const nextFlashcard = () => {
 
 const handleReview = async (quality: number) => {
   if (currentFlashcard.value) {
-    await reviewFlashcard(currentFlashcard.value.id, quality, currentFlashcard.value.difficulty)
+    await reviewFlashcard(currentFlashcard.value._id, quality, currentFlashcard.value.difficulty)
     nextFlashcard()
   }
 }
 </script>
-
