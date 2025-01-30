@@ -148,9 +148,10 @@ export const updateModuleProgress = async (req: AuthRequest, res: Response) => {
 export const getCourseById = async (req: AuthRequest, res: Response) => {
   try {
     const courseId = req.params.id;
-    const userId = req.user?.id;
+    // const userId = req.user?.id;
 
-    const course = await Course.findOne({ _id: courseId, user: userId });
+    const course = await Course.findOne({ _id: courseId });
+    // const course = await Course.findOne({ _id: courseId, user: userId });
     if (!course) {
       return res.status(404).json({ error: "Course not found" });
     }
