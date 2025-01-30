@@ -145,6 +145,23 @@ export const updateModuleProgress = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getCourseById = async (req: AuthRequest, res: Response) => {
+  try {
+    const courseId = req.params.id;
+    const userId = req.user?.id;
+
+    const course = await Course.findOne({ _id: courseId, user: userId });
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    res.json(course);
+  } catch (error) {
+    console.error("Error fetching course:", error);
+    res.status(500).json({ error: "Error fetching course" });
+  }
+};
+
 function parseCourseOutline(outline: string) {
   const validJSON = outline.split("```json").join("").split("```").join("");
   const course = JSON.parse(validJSON) as {

@@ -110,6 +110,19 @@ export function useCourses() {
     }
   }
 
+  const getCourseById = async (id: string): Promise<Course | null> => {
+    isLoading.value = true
+    try {
+      const response = await axiosInstance.get(`/api/courses/${id}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching course:', error)
+      return null
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     courses,
     isLoading,
@@ -118,5 +131,6 @@ export function useCourses() {
     saveCourse,
     deleteCourse,
     updateModuleProgress,
+    getCourseById,
   }
 }

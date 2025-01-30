@@ -1,10 +1,8 @@
 <template>
-  <div class="bg-white p-6 rounded-lg shadow-md">
+  <div class="bg-white p-6 rounded-lg shadow-md mt-12">
     <h3 class="text-2xl font-bold mb-4 text-gray-800">Learning Progress</h3>
     <div class="mb-6">
-      <h4 class="text-lg font-semibold mb-2 text-gray-700">
-        Course Completion
-      </h4>
+      <h4 class="text-lg font-semibold mb-2 text-gray-700">Course Completion</h4>
       <div class="relative pt-1">
         <div class="flex mb-2 items-center justify-between">
           <div>
@@ -24,9 +22,7 @@
       </div>
     </div>
     <div class="mb-6">
-      <h4 class="text-lg font-semibold mb-2 text-gray-700">
-        Flashcard Mastery
-      </h4>
+      <h4 class="text-lg font-semibold mb-2 text-gray-700">Flashcard Mastery</h4>
       <div class="flex justify-between">
         <div class="text-center">
           <p class="text-3xl font-bold text-green-600">
@@ -54,31 +50,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import { Chart } from "chart.js";
+import { ref, onMounted, watch } from 'vue'
+import { Chart } from 'chart.js'
 
 const props = defineProps<{
-  courseCompletion: number;
-  flashcardsMastered: number;
-  flashcardsLearning: number;
-  flashcardsNew: number;
-  studyTimeData: { date: string; minutes: number }[];
-}>();
+  courseCompletion: number
+  flashcardsMastered: number
+  flashcardsLearning: number
+  flashcardsNew: number
+  studyTimeData: { date: string; minutes: number }[]
+}>()
 
-const studyTimeChart = ref<Chart | null>(null);
-const studyTimeChartRef = ref<HTMLCanvasElement | null>(null);
+const studyTimeChart = ref<Chart | null>(null)
+const studyTimeChartRef = ref<HTMLCanvasElement | null>(null)
 
 const createStudyTimeChart = () => {
   if (studyTimeChartRef.value) {
     studyTimeChart.value = new Chart(studyTimeChartRef.value, {
-      type: "line",
+      type: 'line',
       data: {
         labels: props.studyTimeData.map((item) => item.date),
         datasets: [
           {
-            label: "Study Time (minutes)",
+            label: 'Study Time (minutes)',
             data: props.studyTimeData.map((item) => item.minutes),
-            borderColor: "rgb(59, 130, 246)",
+            borderColor: 'rgb(59, 130, 246)',
             tension: 0.1,
           },
         ],
@@ -90,38 +86,34 @@ const createStudyTimeChart = () => {
             beginAtZero: true,
             title: {
               display: true,
-              text: "Minutes",
+              text: 'Minutes',
             },
           },
           x: {
             title: {
               display: true,
-              text: "Date",
+              text: 'Date',
             },
           },
         },
       },
-    });
+    })
   }
-};
+}
 
 onMounted(() => {
-  createStudyTimeChart();
-});
+  createStudyTimeChart()
+})
 
 watch(
   () => props.studyTimeData,
   () => {
     if (studyTimeChart.value) {
-      studyTimeChart.value.data.labels = props.studyTimeData.map(
-        (item) => item.date
-      );
-      studyTimeChart.value.data.datasets[0].data = props.studyTimeData.map(
-        (item) => item.minutes
-      );
-      studyTimeChart.value.update();
+      studyTimeChart.value.data.labels = props.studyTimeData.map((item) => item.date)
+      studyTimeChart.value.data.datasets[0].data = props.studyTimeData.map((item) => item.minutes)
+      studyTimeChart.value.update()
     }
   },
-  { deep: true }
-);
+  { deep: true },
+)
 </script>
