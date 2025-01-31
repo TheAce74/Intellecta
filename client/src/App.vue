@@ -43,14 +43,14 @@
           <component :is="Component" />
         </transition>
       </router-view>
-      <!-- <LearningProgress
+      <LearningProgress
         v-if="isLoggedIn"
         :course-completion="courseCompletion"
         :flashcards-mastered="flashcardsMastered"
         :flashcards-learning="flashcardsLearning"
         :flashcards-new="flashcardsNew"
         :study-time-data="studyTimeData"
-      /> -->
+      />
     </main>
     <footer class="bg-gray-800 text-white py-8">
       <div class="container mx-auto px-4">

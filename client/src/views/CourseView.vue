@@ -3,7 +3,7 @@
     <h1 class="text-3xl font-bold mb-4 text-gray-800">{{ course.title }}</h1>
     <div class="mb-6">
       <span
-        class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded"
+        class="inline-block bg-blue-100 text-blue-800 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded capitalize"
       >
         {{ course.difficulty }}
       </span>

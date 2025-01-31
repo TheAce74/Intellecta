@@ -44,7 +44,7 @@
     </div>
     <div>
       <h4 class="text-lg font-semibold mb-2 text-gray-700">Study Time</h4>
-      <canvas ref="studyTimeChart"></canvas>
+      <!-- <canvas ref="studyTimeChart"></canvas> -->
     </div>
   </div>
 </template>

@@ -104,7 +104,10 @@
 import { ref } from 'vue'
 import { useCourses, type Course } from '@/composables/useCourses'
 import { useAuth } from '@/composables/useAuth'
+import { toast } from 'vue3-toastify'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const subject = ref('')
 const difficulty = ref('beginner')
 const length = ref(5)
@@ -126,9 +129,10 @@ const handleGenerateCourse = async () => {
 const saveCourse = async () => {
   if (isLoggedIn.value && course.value) {
     await saveUserCourse(course.value)
-    // Show a success message or redirect to My Courses page
+    router.push({ name: 'MyCourses' })
+    toast.success('Saved course successfully')
   } else {
-    // Show a message to log in or sign up
+    toast.error('Error saving course, try again')
   }
 }
 </script>
