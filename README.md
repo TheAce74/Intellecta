@@ -11,8 +11,7 @@ Intellecta is an AI-powered learning assistant platform that helps users create 
   - [Installation](#installation)
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
-- [Contributing](#contributing)
-- [License](#license)
+- [Contributing](#contributing)`
 
 ## Features
 
