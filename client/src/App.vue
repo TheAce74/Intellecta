@@ -43,14 +43,14 @@
           <component :is="Component" />
         </transition>
       </router-view>
-      <LearningProgress
+      <!-- <LearningProgress
         v-if="isLoggedIn"
         :course-completion="courseCompletion"
         :flashcards-mastered="flashcardsMastered"
         :flashcards-learning="flashcardsLearning"
         :flashcards-new="flashcardsNew"
         :study-time-data="studyTimeData"
-      />
+      /> -->
     </main>
     <footer class="bg-gray-800 text-white py-8">
       <div class="container mx-auto px-4">
@@ -95,21 +95,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, onBeforeMount, watch, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useCourses } from '@/composables/useCourses'
 import { useFlashcards } from '@/composables/useFlashcards'
 import { useStudyTime } from '@/composables/useStudyTime'
 import LearningProgress from '@/components/LearningProgress.vue'
 import { Menu, X } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
 
-const router = useRouter()
-const { isLoggedIn, logout: authLogout } = useAuth()
+const route = useRoute()
+const { isLoggedIn, logout: authLogout, checkAuth } = useAuth()
 
 const { courses, fetchCourses } = useCourses()
 const { flashcards, fetchFlashcards } = useFlashcards()
 const { studyTimeData, fetchStudyTimeData } = useStudyTime()
+
+const isLoading = ref(true)
+const openMenu = ref(false)
 
 const courseCompletion = computed(() => {
   if (courses.value.length === 0) return 0
@@ -131,20 +134,33 @@ const flashcardsLearning = computed(
 
 const flashcardsNew = computed(() => flashcards.value.filter((f) => f.easeFactor < 1.3).length)
 
-onMounted(async () => {
+const fetchData = async () => {
   if (isLoggedIn.value) {
-    await fetchCourses()
-    await fetchFlashcards()
-    await fetchStudyTimeData()
-
-    // Set up an interval to fetch study time data every 5 minutes
-    setInterval(
-      async () => {
-        await fetchStudyTimeData()
-      },
-      5 * 60 * 1000,
-    )
+    await Promise.all([fetchCourses(), fetchFlashcards(), fetchStudyTimeData()])
   }
+}
+
+onBeforeMount(async () => {
+  await checkAuth()
+  await fetchData()
+  isLoading.value = false
+})
+
+watch(isLoggedIn, (newValue) => {
+  if (newValue) {
+    fetchData()
+  }
+})
+
+watch(route, () => {
+  openMenu.value = false
+})
+
+// Set up an interval to fetch data every 5 minutes
+const dataRefreshInterval = setInterval(fetchData, 5 * 60 * 1000)
+
+onUnmounted(() => {
+  clearInterval(dataRefreshInterval)
 })
 
 const navItems = computed(() => [
@@ -165,10 +181,7 @@ const navItems = computed(() => [
 
 const logout = async () => {
   await authLogout()
-  router.push('/')
 }
-
-const openMenu = ref(false)
 </script>
 
 <style>

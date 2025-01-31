@@ -1,10 +1,13 @@
 import { axiosInstance } from '@/lib/axios'
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { toast } from 'vue3-toastify'
 
 const user = ref(null)
 const isLoading = ref(false)
 
 export function useAuth() {
+  const router = useRouter()
   const isLoggedIn = computed(() => !!user.value)
 
   const login = async (email: string, password: string) => {
@@ -14,8 +17,11 @@ export function useAuth() {
       user.value = response.data.user
       localStorage.setItem('token', response.data.token)
       axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+      toast.success('Logged in successfully')
+      router.push('/')
     } catch (error) {
       console.error('Login error:', error)
+      toast.error('Login failed. Please check your credentials.')
       throw error
     } finally {
       isLoading.value = false
@@ -29,8 +35,11 @@ export function useAuth() {
       user.value = response.data.user
       localStorage.setItem('token', response.data.token)
       axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+      toast.success('Registered successfully')
+      router.push('/')
     } catch (error) {
       console.error('Registration error:', error)
+      toast.error('Registration failed. Please try again.')
       throw error
     } finally {
       isLoading.value = false
@@ -44,8 +53,11 @@ export function useAuth() {
       user.value = null
       localStorage.removeItem('token')
       delete axiosInstance.defaults.headers.common['Authorization']
+      toast.info('Logged out successfully')
+      router.push('/login')
     } catch (error) {
       console.error('Logout error:', error)
+      toast.error('Logout failed. Please try again.')
     } finally {
       isLoading.value = false
     }
