@@ -53,6 +53,9 @@
         </div>
       </div>
     </div>
+    <div class="mt-4 text-right">
+      <p class="text-gray-600">Study time: {{ formatTime(studyTime) }}</p>
+    </div>
   </div>
   <div v-else class="flex justify-center items-center h-64">
     <p class="text-xl text-gray-600">Loading course...</p>
@@ -60,11 +63,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { ChevronUpIcon } from '@heroicons/vue/solid'
 import { useCourses } from '@/composables/useCourses'
+import { useStudyTime } from '@/composables/useStudyTime'
 
 interface Module {
   title: string
@@ -88,7 +92,11 @@ interface Course {
 
 const route = useRoute()
 const { getCourseById } = useCourses()
+const { addStudyTime } = useStudyTime()
 const course = ref<Course | null>(null)
+
+const studyTime = ref(0)
+let timer: number | null = null
 
 onMounted(async () => {
   const courseId = route.params.id as string
@@ -102,7 +110,29 @@ onMounted(async () => {
           quiz: module.quiz.map((q) => ({ ...q, showAnswer: false })),
         })),
       }
+
+  // Start the timer when the component is mounted
+  timer = setInterval(() => {
+    studyTime.value++
+  }, 1000)
 })
+
+onUnmounted(() => {
+  // Clear the timer and save the study time when the component is unmounted
+  if (timer) {
+    clearInterval(timer)
+  }
+
+  // Convert seconds to minutes and round up
+  const studyTimeMinutes = Math.ceil(studyTime.value / 60)
+  addStudyTime(studyTimeMinutes)
+})
+
+const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+}
 
 const showAnswer = (moduleIndex: number, questionIndex: number) => {
   if (course.value && course.value.modules) {

@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
 import flashcardRoutes from "./routes/flashcardRoutes";
 import recommendationRoutes from "./routes/recommendationRoutes";
+import studyTimeRoutes from "./routes/studyTimeRoutes";
 import { authenticateToken } from "./middleware/auth";
 import morgan from "morgan";
 
@@ -30,6 +31,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", authenticateToken, courseRoutes);
 app.use("/api/flashcards", authenticateToken, flashcardRoutes);
 app.use("/api/recommendations", authenticateToken, recommendationRoutes);
+app.use("/api/study-time", authenticateToken, studyTimeRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

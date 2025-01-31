@@ -51,7 +51,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { Chart } from 'chart.js'
+import { Chart, LineElement, PointElement, LinearScale, Title, CategoryScale } from 'chart.js'
+
+Chart.register(LineElement, PointElement, LinearScale, Title, CategoryScale)
 
 const props = defineProps<{
   courseCompletion: number

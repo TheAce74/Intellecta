@@ -95,14 +95,57 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { useCourses } from '@/composables/useCourses'
+import { useFlashcards } from '@/composables/useFlashcards'
+import { useStudyTime } from '@/composables/useStudyTime'
 import LearningProgress from '@/components/LearningProgress.vue'
 import { Menu, X } from 'lucide-vue-next'
 
 const router = useRouter()
 const { isLoggedIn, logout: authLogout } = useAuth()
+
+const { courses, fetchCourses } = useCourses()
+const { flashcards, fetchFlashcards } = useFlashcards()
+const { studyTimeData, fetchStudyTimeData } = useStudyTime()
+
+const courseCompletion = computed(() => {
+  if (courses.value.length === 0) return 0
+  const totalModules = courses.value.reduce((sum, course) => sum + course.modules.length, 0)
+  const completedModules = courses.value.reduce(
+    (sum, course) => sum + course.modules.filter((module) => module.completed).length,
+    0,
+  )
+  return (completedModules / totalModules) * 100
+})
+
+const flashcardsMastered = computed(
+  () => flashcards.value.filter((f) => f.easeFactor >= 2.5).length,
+)
+
+const flashcardsLearning = computed(
+  () => flashcards.value.filter((f) => f.easeFactor >= 1.3 && f.easeFactor < 2.5).length,
+)
+
+const flashcardsNew = computed(() => flashcards.value.filter((f) => f.easeFactor < 1.3).length)
+
+onMounted(async () => {
+  if (isLoggedIn.value) {
+    await fetchCourses()
+    await fetchFlashcards()
+    await fetchStudyTimeData()
+
+    // Set up an interval to fetch study time data every 5 minutes
+    setInterval(
+      async () => {
+        await fetchStudyTimeData()
+      },
+      5 * 60 * 1000,
+    )
+  }
+})
 
 const navItems = computed(() => [
   { to: '/', text: 'Home' },
@@ -125,15 +168,7 @@ const logout = async () => {
   router.push('/')
 }
 
-const courseCompletion = ref(0)
-const flashcardsMastered = ref(0)
-const flashcardsLearning = ref(0)
-const flashcardsNew = ref(0)
-const studyTimeData = ref([])
-
 const openMenu = ref(false)
-
-// You'll need to implement logic to update these values based on user progress
 </script>
 
 <style>
