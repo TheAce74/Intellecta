@@ -1,10 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middleware/auth";
 import StudyTime from "../models/StudyTime";
+import { Types } from "mongoose";
 
 export const getStudyTime = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user?.id ? new Types.ObjectId(req.user.id) : null;
 
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });

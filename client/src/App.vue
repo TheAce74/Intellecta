@@ -154,6 +154,7 @@ watch(isLoggedIn, (newValue) => {
 
 watch(route, () => {
   openMenu.value = false
+  fetchData()
 })
 
 // Set up an interval to fetch data every 5 minutes

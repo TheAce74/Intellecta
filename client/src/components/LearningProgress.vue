@@ -44,16 +44,19 @@
     </div>
     <div>
       <h4 class="text-lg font-semibold mb-2 text-gray-700">Study Time</h4>
-      <!-- <canvas ref="studyTimeChart"></canvas> -->
+      <VueApexCharts
+        type="area"
+        height="350"
+        :options="chartOptions"
+        :series="chartSeries"
+      ></VueApexCharts>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { Chart, LineElement, PointElement, LinearScale, Title, CategoryScale } from 'chart.js'
-
-Chart.register(LineElement, PointElement, LinearScale, Title, CategoryScale)
+import { ref, watch, onMounted } from 'vue'
+import VueApexCharts from 'vue3-apexcharts'
 
 const props = defineProps<{
   courseCompletion: number
@@ -63,59 +66,70 @@ const props = defineProps<{
   studyTimeData: { date: string; minutes: number }[]
 }>()
 
-const studyTimeChart = ref<Chart | null>(null)
-const studyTimeChartRef = ref<HTMLCanvasElement | null>(null)
-
-const createStudyTimeChart = () => {
-  if (studyTimeChartRef.value) {
-    studyTimeChart.value = new Chart(studyTimeChartRef.value, {
-      type: 'line',
-      data: {
-        labels: props.studyTimeData.map((item) => item.date),
-        datasets: [
-          {
-            label: 'Study Time (minutes)',
-            data: props.studyTimeData.map((item) => item.minutes),
-            borderColor: 'rgb(59, 130, 246)',
-            tension: 0.1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Minutes',
-            },
-          },
-          x: {
-            title: {
-              display: true,
-              text: 'Date',
-            },
-          },
-        },
-      },
-    })
-  }
-}
-
-onMounted(() => {
-  createStudyTimeChart()
+const chartOptions = ref<any>({
+  chart: {
+    id: 'study-time-chart',
+    type: 'area',
+    height: 350,
+    zoom: {
+      enabled: false,
+    },
+  },
+  dataLabels: {
+    enabled: false,
+  },
+  stroke: {
+    curve: 'smooth',
+  },
+  title: {
+    text: 'Study Time Trend',
+    align: 'left',
+  },
+  xaxis: {
+    type: 'datetime',
+  },
+  yaxis: {
+    title: {
+      text: 'Minutes',
+    },
+  },
+  tooltip: {
+    x: {
+      format: 'dd MMM yyyy',
+    },
+  },
 })
+
+const chartSeries = ref<
+  Array<{
+    name: string
+    data: number[][]
+  }>
+>([
+  {
+    name: 'Study Time',
+    data: [],
+  },
+])
+
+const updateChartData = () => {
+  chartSeries.value = [
+    {
+      name: 'Study Time',
+      data: props.studyTimeData.map((item) => [new Date(item.date).getTime(), item.minutes]),
+    },
+  ]
+}
 
 watch(
   () => props.studyTimeData,
   () => {
-    if (studyTimeChart.value) {
-      studyTimeChart.value.data.labels = props.studyTimeData.map((item) => item.date)
-      studyTimeChart.value.data.datasets[0].data = props.studyTimeData.map((item) => item.minutes)
-      studyTimeChart.value.update()
-    }
+    updateChartData()
   },
-  { deep: true },
+  { deep: true, immediate: true },
 )
+
+onMounted(() => {
+  updateChartData()
+})
 </script>
